@@ -1,0 +1,27 @@
+{
+    "name": "damage-bot",
+    "module": "src/index.ts",
+    "type": "module",
+    "scripts": {
+        "start": "bun ./src/index.ts",
+        "dev": "bun --watch --no-clear-screen --inspect ./src/index.ts",
+        "check": "tsc && biome check",
+        "format": "biome format --write"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "1.9.2",
+        "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
+        "@types/bun": "latest",
+        "@types/debug": "^4.1.12",
+        "@types/node": "^22.6.1",
+        "discord.js": "^14.16.2"
+    },
+    "peerDependencies": {
+        "typescript": "^5.5.4"
+    },
+    "dependencies": {
+        "debug": "^4.3.7",
+        "lowdb": "^7.0.1",
+        "orbiting": "^1.0.13"
+    }
+}
