@@ -5,8 +5,14 @@ Just a super quick ticket bot for [my freelancing & homework help Discord](https
 ## Todo
 
 - [x] Basic Tickets Opening & Closing
+- [x] Stripe Intergated Payments
+    - [ ] Automatically Updating Invoice Status
+    - [ ] Customer Information Handling
 - [ ] Message Transcript
-- [ ] Stripe Intergated Payments
+- [ ] Ticket Info
+    - [ ] Set Ticket Price
+    - [ ] Paid Status
+- [ ] Close Ticket Prompt (for reason)
 
 ## Tech Stack
 
