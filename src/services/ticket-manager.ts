@@ -2,6 +2,7 @@ import type { Guild, GuildMember } from 'discord.js'
 
 import { db } from './database'
 import { orb } from './orbiting'
+import { getOrCreateCustomer, stripe } from './stripe'
 
 export function getTicketChannelName(username: string) {
     return `ticket-${username}`
@@ -33,9 +34,15 @@ export async function openTicket(member: GuildMember) {
         parent: ticketsCategory.id,
     })
 
+    const overwrites = orb.config.ticketOwnerPermissions.reduce((obj, key) => {
+        obj[key] = true
+        return obj
+    }, Object.create({})) // todo: validation of keys
+
     // create this separately, rather than in the initial channel request since
     // this will allow the created channel to inherit the tickets category's permissions
     await newChannel.permissionOverwrites.create(member.user, {
+        ...overwrites,
         SendMessages: true,
         ViewChannel: true,
     })

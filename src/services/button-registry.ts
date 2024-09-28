@@ -21,6 +21,7 @@ export const CREATE_TICKET_BUTTON = new BaseButton('new_ticket')
 export const DELETE_TICKET_BUTTON = new BaseButton('delete_ticket')
     .setLabel('Close Ticket')
     .setStyle(ButtonStyle.Danger)
+    .setEmoji('❕')
 
 export async function handleButtonInteraction(interaction: Interaction) {
     if (

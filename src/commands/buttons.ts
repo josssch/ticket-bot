@@ -1,5 +1,6 @@
 import { ActionRowBuilder, type ButtonBuilder, TextChannel } from 'discord.js'
 
+import { sendEmbed } from '../common/send-embed'
 import { CREATE_TICKET_BUTTON } from '../services/button-registry'
 import { CommandBase } from '../services/command-registry'
 
@@ -18,14 +19,20 @@ const buttonsCreatorCommand = new CommandBase('buttons')
         const preset = ctx.options.get('preset', true)
         switch (preset.value) {
             case 'ticket':
-                await ctx.channel.send({
-                    content: 'example',
-                    components: [
-                        new ActionRowBuilder<ButtonBuilder>()
-                            .addComponents(CREATE_TICKET_BUTTON)
-                            .toJSON(),
-                    ],
-                })
+                await sendEmbed(
+                    ctx.channel,
+                    {
+                        description:
+                            'If you are looking to create a ticket, click the button below. It is that easy!',
+                    },
+                    {
+                        components: [
+                            new ActionRowBuilder<ButtonBuilder>()
+                                .addComponents(CREATE_TICKET_BUTTON)
+                                .toJSON(),
+                        ],
+                    },
+                )
 
                 await ctx.deleteReply()
                 break
