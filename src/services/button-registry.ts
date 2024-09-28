@@ -5,6 +5,7 @@ import { ButtonBuilder, ButtonStyle, GuildMember } from 'discord.js'
 import { openTicketWithInteraction } from '../common/interaction-open-ticket'
 import { ticketLog } from '../logger'
 import { db } from './database'
+import { stripe } from './stripe'
 
 export class BaseButton extends ButtonBuilder {
     constructor(public readonly id: string) {
@@ -36,9 +37,12 @@ export async function handleButtonInteraction(interaction: Interaction) {
         return
     }
 
+    const { channelId } = interaction
+    const ticket = db.data.tickets[channelId]
+
     if (
         interaction.customId === DELETE_TICKET_BUTTON.id &&
-        interaction.channelId in db.data.tickets &&
+        ticket &&
         interaction.channel
     ) {
         ticketLog(
@@ -46,8 +50,13 @@ export async function handleButtonInteraction(interaction: Interaction) {
             (interaction.channel as TextChannel).name,
         )
 
-        const { channelId } = interaction
         await interaction.channel.delete()
+
+        // void any ticket's invoice if the amount paid on it is 0
+        // todo: make sure these values are up-to-date (as of right now they aren't guaranteed)
+        if (ticket.invoiceId && ticket.amountPaid === 0) {
+            await stripe.invoices.voidInvoice(ticket.invoiceId).catch(() => {})
+        }
 
         db.update(({ tickets, ticketsOwnerIndex }) => {
             delete ticketsOwnerIndex[tickets[channelId].ownerId]

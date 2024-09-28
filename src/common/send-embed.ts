@@ -2,7 +2,7 @@ import {
     type APIEmbed,
     EmbedBuilder,
     type MessageCreateOptions,
-    type SendableChannels,
+    type TextBasedChannelFields,
 } from 'discord.js'
 
 export const DEFAULT_EMBED: APIEmbed = {
@@ -10,7 +10,7 @@ export const DEFAULT_EMBED: APIEmbed = {
 }
 
 export async function sendEmbed(
-    channel: SendableChannels,
+    channel: TextBasedChannelFields,
     embed: APIEmbed | EmbedBuilder,
     options?: string | MessageCreateOptions,
 ) {

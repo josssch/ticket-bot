@@ -8,12 +8,18 @@ if (!process.env.STRIPE_API_KEY) {
 
 export const stripe = new Stripe(process.env.STRIPE_API_KEY)
 
-export async function getOrCreateCustomer(discordId: string) {
+export async function stripeInit() {}
+
+export async function getOrCreateCustomer(
+    discordId: string,
+    userData?: { username: string },
+) {
     if (discordId in db.data.stripeCustomerIndex) {
         return stripe.customers.retrieve(db.data.stripeCustomerIndex[discordId])
     }
 
     const customer = await stripe.customers.create({
+        name: userData?.username,
         metadata: { discordId },
     })
 

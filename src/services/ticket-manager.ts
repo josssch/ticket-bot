@@ -2,7 +2,6 @@ import type { Guild, GuildMember } from 'discord.js'
 
 import { db } from './database'
 import { orb } from './orbiting'
-import { getOrCreateCustomer, stripe } from './stripe'
 
 export function getTicketChannelName(username: string) {
     return `ticket-${username}`
@@ -16,7 +15,7 @@ export async function getTicketsCategory(guild: Guild) {
     return guild.channels.resolve(orb.config.ticketsCategoryId as string)
 }
 
-export async function openTicket(member: GuildMember) {
+export async function createTicketChannel(member: GuildMember) {
     const ticketsCategory = await getTicketsCategory(member.guild)
     if (ticketsCategory === null) {
         throw Error(
@@ -51,6 +50,15 @@ export async function openTicket(member: GuildMember) {
         tickets[newChannel.id] = {
             channelId: newChannel.id,
             ownerId: userId,
+            openedAt: Date.now(),
+            invoiceId: null,
+            invoiceItemId: null,
+            invoiceUrl: null,
+            invoiceCreatedAt: null,
+            currency: orb.config.currencyPreference,
+            amount: null,
+            amountPaid: 0,
+            lastPaidAt: null,
         }
 
         ticketsOwnerIndex[userId] = newChannel.id

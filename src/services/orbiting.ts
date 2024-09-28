@@ -35,6 +35,12 @@ export const orb = orbiting
             enum: ['USD', 'CAD'],
             default: 'USD',
         },
+
+        automaticTax: {
+            title: 'Automatic Tax Calculations',
+            type: 'boolean',
+            default: false,
+        },
     })
     .withLayout(
         {
@@ -47,7 +53,9 @@ export const orb = orbiting
         },
         {
             title: 'Stripe Settings',
-            controls: [{ for: 'currencyPreference' }],
+            controls: [{ for: 'currencyPreference' }, { for: 'automaticTax' }],
         },
     )
     .createConnection()
+
+export type Currency = typeof orb.config.currencyPreference

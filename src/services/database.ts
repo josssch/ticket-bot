@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { JSONFileSyncPreset } from 'lowdb/node'
+import type { Currency, orb } from './orbiting'
 
 export interface Database {
     /**
@@ -19,12 +20,24 @@ export interface Database {
     stripeCustomerIndex: Record<string, string>
 }
 
+export type EpochMilliseconds = number
+
 export interface Ticket {
     channelId: string
     ownerId: string
-}
 
-export type TicketRecords = Record<string, Ticket>
+    openedAt: EpochMilliseconds
+
+    invoiceId: string | null
+    invoiceItemId: string | null
+    invoiceUrl: string | null
+    invoiceCreatedAt: EpochMilliseconds | null
+
+    currency: Currency
+    amount: number | null
+    amountPaid: number
+    lastPaidAt: EpochMilliseconds | null
+}
 
 export const TICKET_DB_PATH = 'data/tickets.json'
 
