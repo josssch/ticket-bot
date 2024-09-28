@@ -40,9 +40,13 @@ export class SlashClient extends Client<true> {
 
 export type ExecutionContext = 'all' | 'guilds' | 'dms'
 
+export type CommandExecutor = (ctx: CommandInteraction) => unknown
+export type AutoCompleteHandler = (ctx: AutocompleteInteraction) => unknown
+
 export class CommandBase extends SlashCommandBuilder {
-    run = async (_ctx: CommandInteraction) => {}
-    autocompleter = async (ctx: AutocompleteInteraction) => ctx.respond([])
+    run: CommandExecutor = (_ctx: CommandInteraction) => {}
+    autocompleter: AutoCompleteHandler = async (ctx: AutocompleteInteraction) =>
+        ctx.respond([])
 
     executionContext: ExecutionContext = 'all'
 
@@ -51,7 +55,7 @@ export class CommandBase extends SlashCommandBuilder {
         this.setName(name)
     }
 
-    public setAutocomplete(autocompleter: typeof this.autocompleter) {
+    public setAutocomplete(autocompleter: AutoCompleteHandler) {
         this.autocompleter = autocompleter
         return this
     }
@@ -61,7 +65,7 @@ export class CommandBase extends SlashCommandBuilder {
         return this
     }
 
-    public setExecutor(executor: typeof this.run) {
+    public setExecutor(executor: CommandExecutor) {
         this.run = executor
         return this
     }
