@@ -17,10 +17,37 @@ export const orb = orbiting
             nullable: true,
             default: null,
         },
+
+        ticketOwnerPermissions: {
+            title: 'Ticket Owner Permissions',
+            description:
+                'This is list of the permissions that should be given to the owner in their own ticket channel.',
+
+            type: 'array',
+            items: { type: 'string' },
+            default: ['AttachFiles'],
+        },
+
+        currencyPreference: {
+            title: 'Currency Preference',
+
+            type: 'string',
+            enum: ['USD', 'CAD'],
+            default: 'USD',
+        },
     })
-    .withLayout({
-        title: 'Channel IDs',
-        description: 'Discord channel related settings',
-        controls: [{ for: 'ticketsCategoryId', renderAs: 'input' }],
-    })
+    .withLayout(
+        {
+            title: 'Channel IDs',
+            description: 'Discord channel related settings',
+            controls: [
+                { for: 'ticketsCategoryId', renderAs: 'input' },
+                { for: 'ticketOwnerPermissions' },
+            ],
+        },
+        {
+            title: 'Stripe Settings',
+            controls: [{ for: 'currencyPreference' }],
+        },
+    )
     .createConnection()

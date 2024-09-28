@@ -8,6 +8,7 @@ import {
 } from 'discord.js'
 import { ticketLog } from '../logger'
 import { DELETE_TICKET_BUTTON } from '../services/button-registry'
+import { getOrCreateCustomer } from '../services/stripe'
 import { openTicket } from '../services/ticket-manager'
 import { sendEmbed } from './send-embed'
 
@@ -27,6 +28,8 @@ export async function openTicketWithInteraction(
         const newChannel = await openTicket(ctx.member)
 
         ticketLog(`Opened new ticket for ${ctx.member.user.username}`)
+
+        await getOrCreateCustomer(ctx.member.user.id)
 
         await ctx.editReply(
             `Your ticket has been created! View it here: ${newChannel}`,

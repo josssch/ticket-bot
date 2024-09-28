@@ -1,6 +1,7 @@
 import { Events, GatewayIntentBits } from 'discord.js'
 
 import buttonsCreatorCommand from './commands/buttons'
+import invoiceCommand from './commands/invoice'
 import ticketCommand from './commands/ticket'
 import { dbLog, log } from './logger'
 import { handleButtonInteraction } from './services/button-registry'
@@ -21,7 +22,11 @@ export const client = new SlashClient({
 client.once(Events.ClientReady, async () => {
     log(`Hello ${client.user.tag}`)
 
-    client.registerCommands(ticketCommand, buttonsCreatorCommand)
+    client.registerCommands(
+        ticketCommand,
+        buttonsCreatorCommand,
+        invoiceCommand,
+    )
 
     try {
         await client.registerGlobalCommands()
