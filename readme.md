@@ -13,6 +13,7 @@ Just a super quick ticket bot for [my freelancing & homework help Discord](https
     - [x] Set Ticket Price
     - [x] Paid Status
 - [x] Close Ticket Prompt (for reason)
+- [ ] Admin Logs Channel
 - [ ] Message Transcript
 
 ## Tech Stack
