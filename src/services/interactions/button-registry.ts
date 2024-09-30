@@ -5,6 +5,8 @@ import {
     ButtonBuilder,
     ButtonStyle,
     GuildMember,
+    TextInputBuilder,
+    TextInputStyle,
 } from 'discord.js'
 
 import { showTicketCreationModal } from '/common/create-ticket-modal'
@@ -60,11 +62,24 @@ export async function handleButtonInteraction(interaction: Interaction) {
         ticket &&
         channel instanceof BaseGuildTextChannel
     ) {
-        await new Modal('Confirm Ticket Deletion')
+        new Modal('Confirm Ticket Deletion')
+            .addRow(
+                new TextInputBuilder({
+                    customId: 'close_reason',
+                    label: 'Reason For Closure',
+                    style: TextInputStyle.Short,
+                    required: false,
+                }),
+            )
             .show(interaction)
-            .then(async () => {
-                ticketLog('Deleting ticket channel', channel.name)
+            .then(async (ctx) => {
+                ticketLog(
+                    'Deleting ticket channel',
+                    channel.name,
+                    `(reason provided: ${ctx.fields.getTextInputValue('close_reason') || 'n/a'})`,
+                )
 
+                await ctx.deferReply()
                 await channel.delete()
 
                 // void any ticket's invoice if the amount paid on it is 0
