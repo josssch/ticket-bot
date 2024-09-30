@@ -9,10 +9,11 @@ Just a super quick ticket bot for [my freelancing & homework help Discord](https
     - [ ] Automatically Updating Invoice Status
     - [ ] Customer Profile Commands
 - [x] Ticket Info
+    - [x] Creation Modal
     - [x] Set Ticket Price
     - [x] Paid Status
+- [x] Close Ticket Prompt (for reason)
 - [ ] Message Transcript
-- [ ] Close Ticket Prompt (for reason)
 
 ## Tech Stack
 

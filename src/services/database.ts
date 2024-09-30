@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync } from 'node:fs'
 import { dirname } from 'node:path'
 import { JSONFileSyncPreset } from 'lowdb/node'
-import type { Currency, orb } from './orbiting'
+import type { Currency } from './orbiting'
 
 export interface Database {
     /**
@@ -27,6 +27,7 @@ export interface Ticket {
     ownerId: string
 
     openedAt: EpochMilliseconds
+    openReason: string | null
 
     invoiceId: string | null
     invoiceItemId: string | null
