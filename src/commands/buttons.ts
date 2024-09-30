@@ -1,8 +1,8 @@
 import { ActionRowBuilder, type ButtonBuilder, TextChannel } from 'discord.js'
 
 import { sendEmbed } from '../common/send-embed'
-import { CREATE_TICKET_BUTTON } from '../services/button-registry'
-import { CommandBase } from '../services/command-registry'
+import { CREATE_TICKET_BUTTON } from '../services/interactions/button-registry'
+import { CommandBase } from '../services/interactions/command-registry'
 
 const buttonsCreatorCommand = new CommandBase('buttons')
     .setDescription(

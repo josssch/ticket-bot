@@ -12,20 +12,33 @@ export async function getTicketsCategory(guild: Guild) {
         return null
     }
 
-    return guild.channels.resolve(orb.config.ticketsCategoryId as string)
+    return guild.channels.resolve(orb.config.ticketsCategoryId)
 }
 
-export async function createTicketChannel(member: GuildMember) {
+export function hasOpenTicket(discordId: string) {
+    return discordId in db.data.ticketsOwnerIndex
+}
+
+export class TicketCreationError extends Error {}
+
+export type CreationOptions = {
+    openReason: string | null
+}
+
+export async function openTicket(
+    member: GuildMember,
+    options: CreationOptions = { openReason: null },
+) {
     const ticketsCategory = await getTicketsCategory(member.guild)
     if (ticketsCategory === null) {
-        throw Error(
+        throw new TicketCreationError(
             'Ticket Category is either unset or unresolvable by the current ID.',
         )
     }
 
     const userId = member.user.id
-    if (userId in db.data.ticketsOwnerIndex) {
-        throw Error('You already have an open ticket.')
+    if (hasOpenTicket(userId)) {
+        throw new TicketCreationError('You already have an open ticket.')
     }
 
     const newChannel = await member.guild.channels.create({
@@ -51,6 +64,7 @@ export async function createTicketChannel(member: GuildMember) {
             channelId: newChannel.id,
             ownerId: userId,
             openedAt: Date.now(),
+            openReason: options.openReason,
             invoiceId: null,
             invoiceItemId: null,
             invoiceUrl: null,
@@ -64,5 +78,5 @@ export async function createTicketChannel(member: GuildMember) {
         ticketsOwnerIndex[userId] = newChannel.id
     })
 
-    return newChannel
+    return db.data.tickets[newChannel.id]!
 }

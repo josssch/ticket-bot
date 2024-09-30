@@ -4,12 +4,12 @@ import buttonsCreatorCommand from './commands/buttons'
 import invoiceCommand from './commands/invoice'
 import ticketCommand from './commands/ticket'
 import { dbLog, log } from './logger'
-import { handleButtonInteraction } from './services/button-registry'
+import { db } from './services/database'
+import { handleButtonInteraction } from './services/interactions/button-registry'
 import {
     SlashClient,
     handleCommandInteraction,
-} from './services/command-registry'
-import { db } from './services/database'
+} from './services/interactions/command-registry'
 
 export const client = new SlashClient({
     intents: [

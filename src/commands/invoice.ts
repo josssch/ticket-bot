@@ -3,12 +3,13 @@ import {
     PermissionFlagsBits,
     type TextBasedChannelFields,
 } from 'discord.js'
+import { getOrCreateCustomer } from '/common/upsert-customer'
 import { sendEmbed } from '../common/send-embed'
 import { log } from '../logger'
-import { CommandBase } from '../services/command-registry'
 import { db } from '../services/database'
+import { CommandBase } from '../services/interactions/command-registry'
 import { type Currency, orb } from '../services/orbiting'
-import { getOrCreateCustomer, stripe } from '../services/stripe'
+import { stripe } from '../services/stripe'
 
 const invoiceLog = log.extend('invoice')
 
@@ -98,7 +99,7 @@ const invoiceCommand = new CommandBase('invoice')
             return
         }
 
-        const customer = await getOrCreateCustomer(ticket.ownerId)
+        const customer = await getOrCreateCustomer({ id: ticket.ownerId })
         const invoice = await stripe.invoices.create({
             automatic_tax: { enabled: orb.config.automaticTax },
             currency: orb.config.currencyPreference,

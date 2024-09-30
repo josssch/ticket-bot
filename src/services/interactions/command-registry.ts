@@ -12,7 +12,7 @@ import {
     Routes,
     SlashCommandBuilder,
 } from 'discord.js'
-import { log } from '../logger'
+import { log } from '/logger'
 
 export class SlashClient extends Client<true> {
     readonly commands: Collection<string, CommandBase> = new Collection()
