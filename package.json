@@ -9,18 +9,17 @@
         "format": "biome format --write"
     },
     "devDependencies": {
-        "@biomejs/biome": "1.9.2",
-        "@ianvs/prettier-plugin-sort-imports": "^4.3.1",
+        "@biomejs/biome": "1.9.3",
         "@types/bun": "latest",
         "@types/debug": "^4.1.12",
-        "@types/node": "^22.6.1",
-        "discord.js": "^14.16.2"
+        "@types/node": "^22.6.1"
     },
     "peerDependencies": {
         "typescript": "^5.5.4"
     },
     "dependencies": {
         "debug": "^4.3.7",
+        "discord.js": "^14.16.3",
         "lowdb": "^7.0.1",
         "orbiting": "^1.0.14",
         "stripe": "^16.12.0"
