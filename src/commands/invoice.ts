@@ -1,17 +1,15 @@
+import { BaseGuildTextChannel, PermissionFlagsBits } from 'discord.js'
 import {
-    EmbedBuilder,
-    PermissionFlagsBits,
-    type TextBasedChannelFields,
-} from 'discord.js'
+    sendInvoiceStatusMessage,
+    updateTicketInvoiceStatus,
+} from '/common/handle-invoice-status'
 import { getOrCreateCustomer } from '/common/upsert-customer'
-import { sendEmbed } from '../common/send-embed'
-import { log } from '../logger'
+import { invoiceLog } from '/logger'
+import { getTicketTopic } from '/services/tickets'
 import { db } from '../services/database'
 import { CommandBase } from '../services/interactions/command-registry'
-import { type Currency, orb } from '../services/orbiting'
+import { orb } from '../services/orbiting'
 import { stripe } from '../services/stripe'
-
-const invoiceLog = log.extend('invoice')
 
 const invoiceCommand = new CommandBase('invoice')
     .setDescription('Generate an invoice')
@@ -19,34 +17,14 @@ const invoiceCommand = new CommandBase('invoice')
     .setExecutionContext('guilds')
     .setExecutor(async (ctx) => {
         const ticket = db.data.tickets[ctx.channelId]
-        if (!ticket) {
+        const ticketChannel = ctx.channel
+
+        if (!ticket || !(ticketChannel instanceof BaseGuildTextChannel)) {
             await ctx.reply({
                 content: 'Please use this command inside a ticket channel',
                 ephemeral: true,
             })
             return
-        }
-
-        const sendInvoice = async () => {
-            const isFullyPaid = ticket.amount! - ticket.amountPaid <= 0
-
-            return sendEmbed(
-                ctx.channel as TextBasedChannelFields,
-                new EmbedBuilder()
-                    .setTitle(
-                        isFullyPaid
-                            ? 'Your Invoice is Paid!'
-                            : 'Your Invoice Ready',
-                    )
-                    .setDescription(
-                        `**[View your invoice here](${ticket.invoiceUrl})**`,
-                    )
-                    .setColor(isFullyPaid ? 0x97ca72 : null)
-                    .addFields({
-                        name: 'Remaining Amount',
-                        value: `${ticket.currency.toUpperCase()} \`\$${(ticket.amount! - ticket.amountPaid).toFixed(2)}\``,
-                    }),
-            )
         }
 
         // this lets the user know the command was recieved, but also lets us use .deleteReply()
@@ -67,20 +45,13 @@ const invoiceCommand = new CommandBase('invoice')
         // if the invoice exists and there is no price provided then it can be assumed
         // they want the invoice message to be resent
         if (invoiceExists && !price) {
-            const updatedInvoice = await stripe.invoices.retrieve(
-                ticket.invoiceId!,
-            )
+            await updateTicketInvoiceStatus(ticket)
 
-            // update all information we can gather from the invoice on stripe
-            ticket.currency = updatedInvoice.currency as Currency
-            ticket.amount = updatedInvoice.amount_due
-            ticket.amountPaid = updatedInvoice.amount_paid
-
-            db.write()
-
-            invoiceLog('Updated invoice information for', ticket.channelId)
-
-            await Promise.all([sendInvoice(), ctx.deleteReply()])
+            await Promise.all([
+                sendInvoiceStatusMessage(ticket, ticketChannel),
+                ctx.deleteReply(),
+                ticketChannel.setTopic(getTicketTopic(ticket)),
+            ])
             return
         }
 
@@ -129,12 +100,16 @@ const invoiceCommand = new CommandBase('invoice')
         ticket.invoiceCreatedAt = Date.now()
         ticket.amount = price
 
-        const tasks = [ctx.deleteReply(), sendInvoice()]
+        db.data.invoiceTicketIndex[invoice.id] = ticket.invoiceId
 
         // save the changes we made ^
         db.write()
 
-        await Promise.all(tasks)
+        await Promise.all([
+            ctx.deleteReply(),
+            sendInvoiceStatusMessage(ticket, ticketChannel),
+            ticketChannel.setTopic(getTicketTopic(ticket)),
+        ])
     })
     .addNumberOption((o) =>
         o

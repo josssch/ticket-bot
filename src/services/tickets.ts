@@ -1,10 +1,45 @@
 import type { Guild, GuildMember } from 'discord.js'
+import { type EpochMilliseconds, db } from './database'
+import { type Currency, orb } from './orbiting'
 
-import { db } from './database'
-import { orb } from './orbiting'
+export interface Ticket {
+    channelId: string
+    ownerId: string
+
+    openedAt: EpochMilliseconds
+    openReason: string | null
+
+    invoiceId: string | null
+    invoiceItemId: string | null
+    invoiceUrl: string | null
+    invoiceCreatedAt: EpochMilliseconds | null
+
+    currency: Currency
+    amount: number | null
+    amountPaid: number
+    lastPaidAt: EpochMilliseconds | null
+}
 
 export function getTicketChannelName(username: string) {
     return `ticket-${username}`
+}
+
+export function getTicketTopic(
+    ticket: Pick<Ticket, 'invoiceId' | 'amountPaid' | 'amount' | 'openReason'>,
+) {
+    if (ticket.invoiceId === null || ticket.amount === null) {
+        return ticket.openReason ?? ''
+    }
+
+    const amountOwed = ticket.amount - ticket.amountPaid
+    const paymentStatus =
+        amountOwed > 0 ? `\$${amountOwed.toFixed(2)} Remaining` : 'Fully Paid'
+
+    let topic = paymentStatus
+
+    if (ticket.openReason) topic += ` | ${ticket.openReason}`
+
+    return topic
 }
 
 export async function getTicketsCategory(guild: Guild) {
@@ -41,8 +76,23 @@ export async function openTicket(
         throw new TicketCreationError('You already have an open ticket.')
     }
 
+    const ticketDetails = {
+        ownerId: userId,
+        openedAt: Date.now(),
+        openReason: options.openReason,
+        invoiceId: null,
+        invoiceItemId: null,
+        invoiceUrl: null,
+        invoiceCreatedAt: null,
+        currency: orb.config.currencyPreference,
+        amount: null,
+        amountPaid: 0,
+        lastPaidAt: null,
+    } satisfies Partial<Ticket>
+
     const newChannel = await member.guild.channels.create({
         name: getTicketChannelName(member.user.username),
+        topic: getTicketTopic(ticketDetails),
         parent: ticketsCategory.id,
     })
 
@@ -61,22 +111,12 @@ export async function openTicket(
 
     db.update(({ tickets, ticketsOwnerIndex }) => {
         tickets[newChannel.id] = {
+            ...ticketDetails,
             channelId: newChannel.id,
-            ownerId: userId,
-            openedAt: Date.now(),
-            openReason: options.openReason,
-            invoiceId: null,
-            invoiceItemId: null,
-            invoiceUrl: null,
-            invoiceCreatedAt: null,
-            currency: orb.config.currencyPreference,
-            amount: null,
-            amountPaid: 0,
-            lastPaidAt: null,
         }
 
         ticketsOwnerIndex[userId] = newChannel.id
     })
 
-    return db.data.tickets[newChannel.id]!
+    return { ticket: db.data.tickets[newChannel.id]!, channel: newChannel }
 }

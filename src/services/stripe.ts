@@ -1,5 +1,4 @@
 import Stripe from 'stripe'
-import { db } from './database'
 
 if (!process.env.STRIPE_API_KEY) {
     console.error('STRIPE_API_KEY is required but unset')

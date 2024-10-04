@@ -1,4 +1,4 @@
-import type { Interaction, TextChannel } from 'discord.js'
+import type { Interaction } from 'discord.js'
 
 import {
     BaseGuildTextChannel,
@@ -10,10 +10,15 @@ import {
 } from 'discord.js'
 
 import { showTicketCreationModal } from '/common/create-ticket-modal'
+import {
+    sendInvoiceStatusMessage,
+    updateTicketInvoiceStatus,
+} from '/common/handle-invoice-status'
 import { ticketLog } from '/logger'
 import { db } from '../database'
+import { orb } from '../orbiting'
 import { stripe } from '../stripe'
-import { hasOpenTicket } from '../tickets'
+import { getTicketTopic, hasOpenTicket } from '../tickets'
 import { Modal } from './modal-registry'
 
 export class BaseButton extends ButtonBuilder {
@@ -27,6 +32,11 @@ export const CREATE_TICKET_BUTTON = new BaseButton('new_ticket')
     .setLabel('Open Ticket')
     .setStyle(ButtonStyle.Secondary)
     .setEmoji('🎟️')
+
+export const UPDATE_INVOICE_STATUS_BUTTON = new BaseButton('invoice_status')
+    .setLabel('Check Invoice')
+    .setStyle(ButtonStyle.Secondary)
+    .setEmoji('🔄')
 
 export const DELETE_TICKET_BUTTON = new BaseButton('delete_ticket')
     .setLabel('Close Ticket')
@@ -56,11 +66,36 @@ export async function handleButtonInteraction(interaction: Interaction) {
 
     const { channel, channelId } = interaction
     const ticket = db.data.tickets[channelId]
+    const isTicketChannel = channel instanceof BaseGuildTextChannel
+
+    // todo: cooldown
+    if (
+        interaction.customId === UPDATE_INVOICE_STATUS_BUTTON.id &&
+        ticket &&
+        isTicketChannel
+    ) {
+        if (ticket.invoiceId === null) {
+            await interaction.reply({
+                content: 'There is no invoice open for this ticket yet',
+                ephemeral: true,
+            })
+            return
+        }
+
+        await updateTicketInvoiceStatus(ticket)
+
+        await Promise.all([
+            interaction.deferReply().then((i) => i.delete()),
+            sendInvoiceStatusMessage(ticket, channel),
+            channel.setTopic(getTicketTopic(ticket)),
+        ])
+        return
+    }
 
     if (
         interaction.customId === DELETE_TICKET_BUTTON.id &&
         ticket &&
-        channel instanceof BaseGuildTextChannel
+        isTicketChannel
     ) {
         new Modal('Confirm Ticket Deletion')
             .addRow(
@@ -90,10 +125,31 @@ export async function handleButtonInteraction(interaction: Interaction) {
                         .catch(() => {})
                 }
 
-                db.update(({ tickets, ticketsOwnerIndex }) => {
-                    delete ticketsOwnerIndex[tickets[channelId].ownerId]
-                    delete tickets[channelId]
-                })
+                // automatically add the customer role to the customer as long as their
+                // ticket was fully paid at the time of it closing
+                if (
+                    ticket.amount &&
+                    ticket.amount - ticket.amountPaid <= 0 &&
+                    orb.config.automaticCustomerRole &&
+                    orb.config.customerRoleId
+                ) {
+                    const ticketUser = await channel.guild.members.fetch(
+                        ticket.ownerId,
+                    )
+
+                    await ticketUser.roles.add(orb.config.customerRoleId)
+                }
+
+                db.update(
+                    ({ tickets, ticketsOwnerIndex, invoiceTicketIndex }) => {
+                        if (ticket.invoiceId) {
+                            delete invoiceTicketIndex[ticket.invoiceId]
+                        }
+
+                        delete ticketsOwnerIndex[tickets[channelId].ownerId]
+                        delete tickets[channelId]
+                    },
+                )
             })
     }
 }

@@ -12,7 +12,9 @@ Just a super quick ticket bot for [my freelancing & homework help Discord](https
     - [x] Creation Modal
     - [x] Set Ticket Price
     - [x] Paid Status
+    - [x] Display Updated Info in Channel Topic
 - [x] Close Ticket Prompt (for reason)
+    - [x] Add Customer Role When Fully Paid
 - [ ] Admin Logs Channel
 - [ ] Message Transcript
 

@@ -1,20 +1,22 @@
 import {
     ActionRowBuilder,
-    BaseGuildTextChannel,
+    type BaseGuildTextChannel,
     type ButtonBuilder,
     type ButtonInteraction,
     type CommandInteraction,
     EmbedBuilder,
-    GuildChannel,
     GuildMember,
+    type GuildTextBasedChannel,
     type ModalSubmitInteraction,
 } from 'discord.js'
-import type { Ticket } from '/services/database'
-import { client } from '..'
-import { ticketLog } from '../logger'
-import { DELETE_TICKET_BUTTON } from '../services/interactions/button-registry'
+import { ticketLog } from '/logger'
+import {
+    DELETE_TICKET_BUTTON,
+    UPDATE_INVOICE_STATUS_BUTTON,
+} from '../services/interactions/button-registry'
 import {
     type CreationOptions,
+    type Ticket,
     TicketCreationError,
     openTicket,
 } from '../services/tickets'
@@ -38,8 +40,10 @@ export async function handleOpenTicketInteraction(
     }
 
     let ticket: Ticket
+    let channel: GuildTextBasedChannel
     try {
-        ticket = await openTicket(ctx.member, options)
+        ;({ ticket, channel } = await openTicket(ctx.member, options))
+
         ticketLog(`Opened new ticket for ${ctx.member.user.username}`)
     } catch (err) {
         if (err instanceof TicketCreationError) {
@@ -59,11 +63,14 @@ export async function handleOpenTicketInteraction(
         ctx.editReply(
             `Your ticket has been created! View it here: <#${ticket.channelId}>`, // <#ID> is channel linking
         ),
-        sendTicketMessage(ticket).then((msg) => msg?.pin()),
+        sendTicketMessage(ticket, channel).then((msg) => msg?.pin()),
     ])
 }
 
-export async function sendTicketMessage(ticket: Ticket) {
+export async function sendTicketMessage(
+    ticket: Ticket,
+    ticketChannel: BaseGuildTextChannel,
+) {
     // moved out to make it more readable
     const embed = new EmbedBuilder()
         .setTitle('Your Ticket')
@@ -77,16 +84,14 @@ export async function sendTicketMessage(ticket: Ticket) {
             value: ticket.openReason,
         })
 
-    const ticketChannel = await client.channels.fetch(ticket.channelId)
-    if (!(ticketChannel instanceof BaseGuildTextChannel)) {
-        return null
-    }
-
     return sendEmbed(ticketChannel, embed, {
         content: `<@${ticket.ownerId}>`, // <@ID> format is a mention
         components: [
             new ActionRowBuilder<ButtonBuilder>()
-                .addComponents(DELETE_TICKET_BUTTON)
+                .addComponents(
+                    UPDATE_INVOICE_STATUS_BUTTON,
+                    DELETE_TICKET_BUTTON,
+                )
                 .toJSON(),
         ],
     })

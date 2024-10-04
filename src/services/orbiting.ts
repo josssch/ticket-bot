@@ -18,6 +18,23 @@ export const orb = orbiting
             default: null,
         },
 
+        customerRoleId: {
+            title: 'Customer Role ID',
+
+            type: 'string',
+            nullable: true,
+            default: null,
+        },
+
+        automaticCustomerRole: {
+            title: 'Automatic Customer Role',
+            description:
+                'Whether to assign the customer role to individuals when they have paid an invoice.',
+
+            type: 'boolean',
+            default: true,
+        },
+
         ticketOwnerPermissions: {
             title: 'Ticket Owner Permissions',
             description:
@@ -41,19 +58,32 @@ export const orb = orbiting
             type: 'boolean',
             default: false,
         },
+
+        invoiceUpdatesMS: {
+            title: 'Invoice Status Update Frequency',
+            description: 'In milliseconds',
+
+            type: 'integer',
+            default: 1000 * 60, // every minute by default
+        },
     })
     .withLayout(
         {
-            title: 'Channel IDs',
-            description: 'Discord channel related settings',
+            title: 'Discord Settings',
             controls: [
                 { for: 'ticketsCategoryId', renderAs: 'input' },
                 { for: 'ticketOwnerPermissions' },
+                { for: 'customerRoleId' },
+                { for: 'automaticCustomerRole' },
             ],
         },
         {
             title: 'Stripe Settings',
-            controls: [{ for: 'currencyPreference' }, { for: 'automaticTax' }],
+            controls: [
+                { for: 'currencyPreference' },
+                { for: 'automaticTax' },
+                { for: 'invoiceUpdatesMS' },
+            ],
         },
     )
     .createConnection()

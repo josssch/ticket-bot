@@ -1,9 +1,4 @@
-import {
-    GuildMember,
-    ModalSubmitInteraction,
-    TextInputBuilder,
-    TextInputStyle,
-} from 'discord.js'
+import { GuildMember, TextInputBuilder, TextInputStyle } from 'discord.js'
 import {
     Modal,
     type ModalCompatibleInteraction,
